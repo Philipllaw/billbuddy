@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Trash2, Plus, Users, Receipt, Calculator, Settings, AlertTriangle, Check, X, ArrowRightLeft, Save, Book, ArrowLeft, DollarSign, Wallet, RotateCcw } from 'lucide-react';
+import { Trash2, Plus, Users, Receipt, Calculator, Settings, AlertTriangle, Check, ArrowLeft, DollarSign, Wallet, RotateCcw, Book, Save, ArrowRightLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Safe Storage Utility ---
-const STORAGE_KEY = 'travel_expense_books_v3_companion';
+const STORAGE_KEY = 'travel_expense_books_v4_responsive';
 
 const safeStorage = {
   getItem: (key) => {
@@ -32,7 +32,7 @@ const formatCurrency = (amount, currency = 'HKD') => {
 };
 
 export default function TravelExpenseApp() {
-  // --- Global State: All Books ---
+  // --- Global State ---
   const [books, setBooks] = useState(() => {
     const saved = safeStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -43,12 +43,11 @@ export default function TravelExpenseApp() {
   const [newBookName, setNewBookName] = useState('');
   const [deleteBookModal, setDeleteBookModal] = useState({ show: false, bookId: null });
 
-  // Auto-save whenever books change
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEY, JSON.stringify(books));
   }, [books]);
 
-  // --- Handlers: Book Management ---
+  // --- Handlers ---
   const handleCreateBook = () => {
     if (!newBookName.trim()) return;
     
@@ -56,17 +55,15 @@ export default function TravelExpenseApp() {
       id: Date.now().toString(),
       name: newBookName.trim(),
       created: new Date().toISOString(),
-      // Default Data Structure for a Book
       members: [],
       transactions: [],
       settings: { exchangeRate: 0.052, foreignCurrency: 'JPY' },
-      settledMarkers: {} // format: "debtorId-creditorId": true
+      settledMarkers: {} 
     };
 
     setBooks([newBook, ...books]);
     setNewBookName('');
     setIsCreateModalOpen(false);
-    // Optional: Auto open the new book
     setActiveBookId(newBook.id);
   };
 
@@ -86,39 +83,38 @@ export default function TravelExpenseApp() {
   // --- Render ---
   const activeBook = books.find(b => b.id === activeBookId);
 
+  // Layout Class: 
+  // w-full: Always take full width of the parent (phone screen).
+  // max-w-5xl: Stop expanding at approx 1024px (logical pixels) for tablets/desktops.
+  // mx-auto: Center it on large screens.
+  const containerClass = "min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-5xl mx-auto shadow-2xl transition-all duration-300";
+
   if (activeBook) {
     return (
-      <ActiveBookView 
-        book={activeBook} 
-        onUpdate={updateActiveBook} 
-        onBack={() => setActiveBookId(null)} 
-      />
+      <div className={containerClass}>
+        <ActiveBookView 
+          book={activeBook} 
+          onUpdate={updateActiveBook} 
+          onBack={() => setActiveBookId(null)} 
+        />
+      </div>
     );
   }
 
   return (
-    /* 
-       LAYOUT FIX: 
-       Changed 'max-w-md' to 'w-full max-w-3xl'.
-       This allows the app to expand up to 768px (tablet/large phone width) 
-       while taking full width on smaller devices.
-    */
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-3xl mx-auto shadow-2xl">
+    <div className={containerClass}>
       {/* Bookshelf Header */}
       <header className="bg-gray-900 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="w-full relative flex items-center justify-center h-10">
-          {/* 1. Title Centered & Renamed */}
-          <h1 className="text-xl font-bold flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+          <h1 className="text-xl font-bold flex items-center gap-2 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
             <Book size={24} className="text-rose-400" /> 同行記
           </h1>
-          
-          {/* 2. Conditional Button: Only show if books exist */}
           {books.length > 0 && (
             <button 
               onClick={() => setIsCreateModalOpen(true)}
               className="absolute right-0 bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition"
             >
-              <Plus size={16} /> 立即起番份數簿
+              <Plus size={16} /> <span className="hidden sm:inline">新數簿</span>
             </button>
           )}
         </div>
@@ -126,7 +122,6 @@ export default function TravelExpenseApp() {
 
       <main className="w-full p-4">
         {books.length === 0 ? (
-          // Empty State
           <div className="mt-10 flex flex-col items-center justify-center">
             <button 
               onClick={() => setIsCreateModalOpen(true)}
@@ -139,9 +134,13 @@ export default function TravelExpenseApp() {
             </button>
           </div>
         ) : (
-          // Book List
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {/* Added sm:grid-cols-2 to show 2 columns on wider screens if needed */}
+          /* 
+             RESPONSIVE GRID SYSTEM:
+             grid-cols-1: Mobile (1 column)
+             sm:grid-cols-2: Large Phones/Small Tablets (2 columns)
+             lg:grid-cols-3: Desktop/Landscape Tablets (3 columns)
+          */
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {books.map(book => (
               <motion.div 
                 key={book.id}
@@ -149,14 +148,14 @@ export default function TravelExpenseApp() {
                 className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center group hover:shadow-md transition cursor-pointer"
                 onClick={() => setActiveBookId(book.id)}
               >
-                <div className="flex items-center gap-4">
-                  <div className="bg-rose-100 text-rose-600 p-3 rounded-xl">
+                <div className="flex items-center gap-4 overflow-hidden">
+                  <div className="bg-rose-100 text-rose-600 p-3 rounded-xl flex-shrink-0">
                     <Book size={24} />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-800">{book.name}</h3>
-                    <p className="text-xs text-gray-400">
-                      建立於: {new Date(book.created).toLocaleDateString()} • {book.members.length} 位隊友
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-lg text-gray-800 truncate">{book.name}</h3>
+                    <p className="text-xs text-gray-400 truncate">
+                      {new Date(book.created).toLocaleDateString()} • {book.members.length} 位隊友
                     </p>
                   </div>
                 </div>
@@ -165,7 +164,7 @@ export default function TravelExpenseApp() {
                     e.stopPropagation();
                     setDeleteBookModal({ show: true, bookId: book.id });
                   }}
-                  className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                  className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition flex-shrink-0"
                 >
                   <Trash2 size={20} />
                 </button>
@@ -175,7 +174,7 @@ export default function TravelExpenseApp() {
         )}
       </main>
 
-      {/* Create Book Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -204,7 +203,6 @@ export default function TravelExpenseApp() {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal (Burn Book) */}
       <AnimatePresence>
         {deleteBookModal.show && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -217,22 +215,19 @@ export default function TravelExpenseApp() {
               <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                 <AlertTriangle size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">是否要燒數簿？</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                刪除後資料將無法復原，所有帳目將會灰飛煙滅。
-              </p>
-              <div className="flex gap-3">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">確認刪除？</h3>
+              <div className="flex gap-3 mt-6">
                 <button 
                   onClick={() => setDeleteBookModal({ show: false, bookId: null })}
-                  className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-700 hover:bg-gray-200"
+                  className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-700"
                 >
-                  否 (取消)
+                  取消
                 </button>
                 <button 
                   onClick={handleDeleteBookConfirm}
-                  className="flex-1 py-3 rounded-xl bg-red-600 font-bold text-white hover:bg-red-700 shadow-lg shadow-red-200"
+                  className="flex-1 py-3 rounded-xl bg-red-600 font-bold text-white"
                 >
-                  是 (燒毀)
+                  刪除
                 </button>
               </div>
             </motion.div>
@@ -247,7 +242,6 @@ export default function TravelExpenseApp() {
 function ActiveBookView({ book, onUpdate, onBack }) {
   const [activeTab, setActiveTab] = useState('members');
   
-  // Local state for inputs (doesn't need to be saved to disk until submitted)
   const [newMemberName, setNewMemberName] = useState('');
   const [expenseForm, setExpenseForm] = useState({
     amount: '',
@@ -260,13 +254,11 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [settleModal, setSettleModal] = useState({ show: false, debtKey: null });
 
-  // Helpers
   const showToast = (message, type = 'success') => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
   };
 
-  // Actions
   const updateSettings = (key, value) => {
     onUpdate({ settings: { ...book.settings, [key]: value } });
   };
@@ -280,7 +272,6 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   };
 
   const removeMember = (id) => {
-    // Check if involved in transactions
     const hasRecords = book.transactions.some(t => t.payerId === id || t.involvedIds.includes(id));
     if (hasRecords) {
       showToast("此人有帳在身，不能刪除", "error");
@@ -328,7 +319,6 @@ function ActiveBookView({ book, onUpdate, onBack }) {
     setSettleModal({ show: false, debtKey: null });
   };
 
-  // Logic: Settlement Calculation
   const settlementPlan = useMemo(() => {
     const balances = {}; 
     book.members.forEach(m => balances[m.id] = 0);
@@ -387,12 +377,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   }, [book.members, book.transactions]);
 
   return (
-    /* 
-       LAYOUT FIX: 
-       Changed 'max-w-md' to 'w-full max-w-3xl'.
-       This ensures the active book view also uses the full available width.
-    */
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-3xl mx-auto shadow-2xl">
+    <>
       {/* Header */}
       <header className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="w-full flex items-center justify-between">
@@ -414,60 +399,63 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         {/* Tab 1: Settings & Members */}
         {activeTab === 'members' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
-                <Settings size={20} /> 匯率設定
-              </h2>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium whitespace-nowrap">外幣代號:</span>
-                  <input 
-                    type="text" 
-                    value={book.settings.foreignCurrency}
-                    onChange={(e) => updateSettings('foreignCurrency', e.target.value.toUpperCase())}
-                    className="border p-2 rounded w-20 text-center uppercase font-bold"
-                    maxLength={3}
-                  />
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-gray-600">1 {book.settings.foreignCurrency} = </span>
-                  <input 
-                    type="number" 
-                    value={book.settings.exchangeRate}
-                    onChange={(e) => updateSettings('exchangeRate', parseFloat(e.target.value))}
-                    step="0.0001"
-                    className="border p-2 rounded w-28 text-center font-mono"
-                  />
-                  <span className="text-sm text-gray-600">HKD</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
-                <Users size={20} /> 隊友名單
-              </h2>
-              <div className="flex gap-2 mb-6">
-                <input
-                  type="text"
-                  placeholder="輸入名字"
-                  className="flex-1 border border-gray-300 p-3 rounded-lg"
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addMember()}
-                />
-                <button onClick={addMember} className="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap">放低一蚊跟機</button>
-              </div>
-              <div className="space-y-2">
-                {book.members.map(member => (
-                  <div key={member.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
-                    <span className="font-medium text-gray-700">{member.name}</span>
-                    <button onClick={() => removeMember(member.id)} className="text-gray-400 hover:text-red-500 p-2">
-                      <Trash2 size={18} />
-                    </button>
+            {/* Responsive Grid for Settings/Members on large screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
+                  <Settings size={20} /> 匯率設定
+                </h2>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium whitespace-nowrap">外幣代號:</span>
+                    <input 
+                      type="text" 
+                      value={book.settings.foreignCurrency}
+                      onChange={(e) => updateSettings('foreignCurrency', e.target.value.toUpperCase())}
+                      className="border p-2 rounded w-20 text-center uppercase font-bold"
+                      maxLength={3}
+                    />
                   </div>
-                ))}
-                {book.members.length === 0 && <div className="text-center text-gray-400">暫無隊友</div>}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-gray-600">1 {book.settings.foreignCurrency} = </span>
+                    <input 
+                      type="number" 
+                      value={book.settings.exchangeRate}
+                      onChange={(e) => updateSettings('exchangeRate', parseFloat(e.target.value))}
+                      step="0.0001"
+                      className="border p-2 rounded w-28 text-center font-mono"
+                    />
+                    <span className="text-sm text-gray-600">HKD</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
+                  <Users size={20} /> 隊友名單
+                </h2>
+                <div className="flex gap-2 mb-6">
+                  <input
+                    type="text"
+                    placeholder="輸入名字"
+                    className="flex-1 border border-gray-300 p-3 rounded-lg min-w-0"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addMember()}
+                  />
+                  <button onClick={addMember} className="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap">新增</button>
+                </div>
+                <div className="space-y-2">
+                  {book.members.map(member => (
+                    <div key={member.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <span className="font-medium text-gray-700">{member.name}</span>
+                      <button onClick={() => removeMember(member.id)} className="text-gray-400 hover:text-red-500 p-2">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                  {book.members.length === 0 && <div className="text-center text-gray-400">暫無隊友</div>}
+                </div>
               </div>
             </div>
           </div>
@@ -476,7 +464,8 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         {/* Tab 2: Add Expense */}
         {activeTab === 'add' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+            {/* Centered form with max width for readability on large screens */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6 max-w-2xl mx-auto">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <Receipt className="text-rose-500" /> 新增消費
               </h2>
@@ -566,116 +555,121 @@ function ActiveBookView({ book, onUpdate, onBack }) {
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
               <Receipt className="text-rose-500" /> 消費記錄
             </h2>
-            {book.transactions.length === 0 ? (
-              <div className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">暫無消費記錄</div>
-            ) : (
-              book.transactions.map((t) => (
-                <div 
-                  key={t.id} 
-                  className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3 ${t.isDeleted ? 'opacity-50 grayscale' : ''}`}
-                >
-                  <div className={`flex-1 flex flex-col gap-2 ${t.isDeleted ? 'line-through' : ''}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-gray-800 text-lg">{t.description}</h3>
-                        <p className="text-xs text-gray-400">{new Date(t.date).toLocaleString('zh-HK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+            {/* Use grid for history items on large screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {book.transactions.length === 0 ? (
+                <div className="col-span-full text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">暫無消費記錄</div>
+              ) : (
+                book.transactions.map((t) => (
+                  <div 
+                    key={t.id} 
+                    className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3 ${t.isDeleted ? 'opacity-50 grayscale' : ''}`}
+                  >
+                    <div className={`flex-1 flex flex-col gap-2 ${t.isDeleted ? 'line-through' : ''}`}>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-gray-800 text-lg">{t.description}</h3>
+                          <p className="text-xs text-gray-400">{new Date(t.date).toLocaleString('zh-HK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-rose-600 text-lg">{formatCurrency(t.originalAmount, t.originalCurrency)}</div>
+                          {t.originalCurrency !== 'HKD' && <div className="text-xs text-gray-400">≈ {formatCurrency(t.amountHKD, 'HKD')}</div>}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-rose-600 text-lg">{formatCurrency(t.originalAmount, t.originalCurrency)}</div>
-                        {t.originalCurrency !== 'HKD' && <div className="text-xs text-gray-400">≈ {formatCurrency(t.amountHKD, 'HKD')}</div>}
+                      <div className="h-px bg-gray-100 my-1"></div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span><span className="font-bold text-gray-800">{t.payerName}</span> 先付</span>
+                        <span>{t.involvedIds.length} 人平分</span>
                       </div>
                     </div>
-                    <div className="h-px bg-gray-100 my-1"></div>
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span><span className="font-bold text-gray-800">{t.payerName}</span> 先付</span>
-                      <span>{t.involvedIds.length} 人平分</span>
+                    
+                    <div className="flex items-center border-l pl-3 border-gray-100">
+                      <button 
+                        onClick={() => toggleTransactionDelete(t.id)}
+                        className={`p-2 rounded-full transition ${t.isDeleted ? 'bg-gray-200 text-gray-500' : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500'}`}
+                        title={t.isDeleted ? "還原" : "刪除"}
+                      >
+                        {t.isDeleted ? <RotateCcw size={18} /> : <Trash2 size={18} />}
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center border-l pl-3 border-gray-100">
-                    <button 
-                      onClick={() => toggleTransactionDelete(t.id)}
-                      className={`p-2 rounded-full transition ${t.isDeleted ? 'bg-gray-200 text-gray-500' : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500'}`}
-                      title={t.isDeleted ? "還原" : "刪除"}
-                    >
-                      {t.isDeleted ? <RotateCcw size={18} /> : <Trash2 size={18} />}
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         )}
 
         {/* Tab 4: Settlement */}
         {activeTab === 'settle' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
-                <Calculator size={20} /> 成員收支總覽 (HKD)
-              </h2>
-              <div className="space-y-3">
-                {book.members.map(m => {
-                  const balance = settlementPlan.balances[m.id] || 0;
-                  const isPositive = balance > 0;
-                  const isZero = Math.abs(balance) < 0.01;
-                  return (
-                    <div key={m.id} className="flex justify-between items-center p-2 border-b border-gray-50 last:border-0">
-                      <span className="font-medium text-gray-700">{m.name}</span>
-                      <span className={`font-mono font-bold ${isZero ? 'text-gray-400' : isPositive ? 'text-green-600' : 'text-red-500'}`}>
-                        {isZero ? '-' : (isPositive ? '+' : '') + formatCurrency(balance, 'HKD')}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="bg-gray-900 text-white p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <ArrowRightLeft size={20} className="text-rose-400" /> 智能分帳方案
-              </h2>
-              {settlementPlan.plan.length === 0 ? (
-                <div className="text-center text-gray-400 py-4">目前沒有需要結算的債務。</div>
-              ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
+                  <Calculator size={20} /> 成員收支總覽 (HKD)
+                </h2>
                 <div className="space-y-3">
-                  {settlementPlan.plan.map((item, idx) => {
-                    const debtKey = `${item.fromId}-${item.toId}`;
-                    const isSettled = book.settledMarkers && book.settledMarkers[debtKey];
-
+                  {book.members.map(m => {
+                    const balance = settlementPlan.balances[m.id] || 0;
+                    const isPositive = balance > 0;
+                    const isZero = Math.abs(balance) < 0.01;
                     return (
-                      <div key={idx} className="flex items-center justify-between bg-white/10 p-3 rounded-lg relative overflow-hidden">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2 text-sm mb-1">
-                            <span className="font-bold text-rose-300">{item.fromName}</span>
-                            <span className="text-xs text-gray-400">給</span>
-                            <span className="font-bold text-green-300">{item.toName}</span>
-                          </div>
-                          <div className="font-mono font-bold text-xl">
-                            {formatCurrency(item.amount, 'HKD')}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          {isSettled ? (
-                            <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">
-                              <Check size={14} />
-                              <span className="text-xs font-bold">上等人</span>
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={() => setSettleModal({ show: true, debtKey })}
-                              className="bg-white/20 hover:bg-white/30 active:scale-95 transition p-2 rounded-full text-white"
-                            >
-                              <DollarSign size={20} />
-                            </button>
-                          )}
-                        </div>
+                      <div key={m.id} className="flex justify-between items-center p-2 border-b border-gray-50 last:border-0">
+                        <span className="font-medium text-gray-700">{m.name}</span>
+                        <span className={`font-mono font-bold ${isZero ? 'text-gray-400' : isPositive ? 'text-green-600' : 'text-red-500'}`}>
+                          {isZero ? '-' : (isPositive ? '+' : '') + formatCurrency(balance, 'HKD')}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
-              )}
+              </div>
+
+              <div className="bg-gray-900 text-white p-5 rounded-2xl shadow-lg h-fit">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <ArrowRightLeft size={20} className="text-rose-400" /> 智能分帳方案
+                </h2>
+                {settlementPlan.plan.length === 0 ? (
+                  <div className="text-center text-gray-400 py-4">目前沒有需要結算的債務。</div>
+                ) : (
+                  <div className="space-y-3">
+                    {settlementPlan.plan.map((item, idx) => {
+                      const debtKey = `${item.fromId}-${item.toId}`;
+                      const isSettled = book.settledMarkers && book.settledMarkers[debtKey];
+
+                      return (
+                        <div key={idx} className="flex items-center justify-between bg-white/10 p-3 rounded-lg relative overflow-hidden">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 text-sm mb-1">
+                              <span className="font-bold text-rose-300">{item.fromName}</span>
+                              <span className="text-xs text-gray-400">給</span>
+                              <span className="font-bold text-green-300">{item.toName}</span>
+                            </div>
+                            <div className="font-mono font-bold text-xl">
+                              {formatCurrency(item.amount, 'HKD')}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            {isSettled ? (
+                              <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">
+                                <Check size={14} />
+                                <span className="text-xs font-bold">上等人</span>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => setSettleModal({ show: true, debtKey })}
+                                className="bg-white/20 hover:bg-white/30 active:scale-95 transition p-2 rounded-full text-white"
+                              >
+                                <DollarSign size={20} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -724,7 +718,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                   onClick={() => setSettleModal({ show: false, debtKey: null })}
                   className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-600 hover:bg-gray-200 text-xs px-1"
                 >
-                  已走數/準備走數/未收到
+                  取消
                 </button>
               </div>
             </motion.div>
@@ -732,17 +726,16 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Nav */}
+      {/* Bottom Nav - Fixed width matching container */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-40">
-        {/* Changed max-w-3xl to match main container */}
-        <div className="flex justify-around w-full max-w-3xl mx-auto">
+        <div className="w-full max-w-5xl mx-auto flex justify-around">
           <NavButton active={activeTab === 'members'} onClick={() => setActiveTab('members')} icon={<Users size={20} />} label="隊友" />
           <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<Plus size={24} />} label="記帳" isMain />
           <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<Receipt size={20} />} label="記錄" />
           <NavButton active={activeTab === 'settle'} onClick={() => setActiveTab('settle')} icon={<Calculator size={20} />} label="分帳" />
         </div>
       </nav>
-    </div>
+    </>
   );
 }
 
