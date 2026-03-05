@@ -225,7 +225,7 @@ export default function TravelExpenseApp() {
               <input
                 autoFocus
                 type="text"
-                placeholder="例如：7月日本東京之旅"
+                placeholder="例如：4月日本櫻花之旅"
                 className="w-full border p-3 rounded-lg mb-4 text-lg"
                 value={newBookName}
                 onChange={(e) => setNewBookName(e.target.value)}
@@ -252,19 +252,19 @@ export default function TravelExpenseApp() {
               <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                 <AlertTriangle size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">確認刪除？</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">刪除後資料將無法復原，所有帳目將會灰飛煙滅。</h3>
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setDeleteBookModal({ show: false, bookId: null })}
                   className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-700"
                 >
-                  取消
+                  否 (取消)
                 </button>
                 <button
                   onClick={handleDeleteBookConfirm}
                   className="flex-1 py-3 rounded-xl bg-red-600 font-bold text-white"
                 >
-                  刪除
+                  是 (燒毀)
                 </button>
               </div>
             </motion.div>
@@ -460,7 +460,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                     onChange={(e) => setNewMemberName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addMember()}
                   />
-                  <button onClick={addMember} className="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">新增</button>
+                  <button onClick={addMember} className="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">放低一蚊跟機</button>
                 </div>
                 <div className="space-y-2">
                   {book.members.map(member => (
@@ -518,7 +518,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">誰先付款？</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1">邊個俾先？</label>
                 <select
                   className="w-full border p-3 rounded-lg bg-white"
                   value={expenseForm.payerId}
@@ -530,7 +530,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-bold text-gray-500">誰有責任平分？</label>
+                  <label className="block text-xs font-bold text-gray-500">邊個有責任要平分？</label>
                   <button
                     onClick={() => setExpenseForm(prev => ({ ...prev, involvedIds: book.members.map(m => m.id) }))}
                     className="text-xs text-rose-500 font-bold hover:underline"
@@ -636,7 +636,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
 
               <div className="bg-gray-900 text-white p-5 rounded-2xl shadow-lg h-fit">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <ArrowRightLeft size={20} className="text-rose-400" /> 智能分帳方案
+                  <ArrowRightLeft size={20} className="text-rose-400" /> 找數總結
                 </h2>
                 {settlementPlan.plan.length === 0 ? (
                   <div className="text-center text-gray-400 py-4">目前沒有需要結算的債務。</div>
@@ -716,13 +716,13 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                   onClick={() => markAsSettled(settleModal.debtKey)}
                   className="flex-1 py-3 rounded-xl bg-green-500 font-bold text-white hover:bg-green-600 shadow-lg shadow-green-200"
                 >
-                  是
+                  數已找
                 </button>
                 <button
                   onClick={() => setSettleModal({ show: false, debtKey: null })}
                   className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-600 hover:bg-gray-200"
                 >
-                  取消
+                  數已走/準備走/未收到
                 </button>
               </div>
             </motion.div>
