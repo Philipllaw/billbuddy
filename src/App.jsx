@@ -3,7 +3,7 @@ import { Trash2, Plus, Users, Receipt, Calculator, Settings, AlertTriangle, Chec
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Safe Storage Utility ---
-const STORAGE_KEY = 'travel_expense_books_v4_responsive';
+const STORAGE_KEY = 'travel_expense_books_v5_fullwidth';
 
 const safeStorage = {
   getItem: (key) => {
@@ -83,11 +83,9 @@ export default function TravelExpenseApp() {
   // --- Render ---
   const activeBook = books.find(b => b.id === activeBookId);
 
-  // Layout Class: 
-  // w-full: Always take full width of the parent (phone screen).
-  // max-w-5xl: Stop expanding at approx 1024px (logical pixels) for tablets/desktops.
-  // mx-auto: Center it on large screens.
-  const containerClass = "min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-5xl mx-auto shadow-2xl transition-all duration-300";
+  // FIX: Removed max-w-5xl constraint for mobile view to ensure full width usage
+  // Only applying max-width on very large screens (lg breakpoint)
+  const containerClass = "min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full lg:max-w-4xl mx-auto shadow-xl transition-all duration-300";
 
   if (activeBook) {
     return (
@@ -134,13 +132,8 @@ export default function TravelExpenseApp() {
             </button>
           </div>
         ) : (
-          /* 
-             RESPONSIVE GRID SYSTEM:
-             grid-cols-1: Mobile (1 column)
-             sm:grid-cols-2: Large Phones/Small Tablets (2 columns)
-             lg:grid-cols-3: Desktop/Landscape Tablets (3 columns)
-          */
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          // FIX: Changed grid to single column for mobile/tablet, only 2 columns on very large screens
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
             {books.map(book => (
               <motion.div 
                 key={book.id}
@@ -399,9 +392,9 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         {/* Tab 1: Settings & Members */}
         {activeTab === 'members' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            {/* Responsive Grid for Settings/Members on large screens */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-fit">
+            {/* FIX: Removed grid-cols-2, forced vertical stack for mobile/tablet */}
+            <div className="flex flex-col gap-6">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
                   <Settings size={20} /> 匯率設定
                 </h2>
@@ -464,8 +457,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         {/* Tab 2: Add Expense */}
         {activeTab === 'add' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            {/* Centered form with max width for readability on large screens */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6 max-w-2xl mx-auto">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6 w-full mx-auto">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <Receipt className="text-rose-500" /> 新增消費
               </h2>
@@ -555,15 +547,15 @@ function ActiveBookView({ book, onUpdate, onBack }) {
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
               <Receipt className="text-rose-500" /> 消費記錄
             </h2>
-            {/* Use grid for history items on large screens */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* FIX: Removed grid layout, using flex-col for full width list items */}
+            <div className="flex flex-col gap-4">
               {book.transactions.length === 0 ? (
-                <div className="col-span-full text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">暫無消費記錄</div>
+                <div className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">暫無消費記錄</div>
               ) : (
                 book.transactions.map((t) => (
                   <div 
                     key={t.id} 
-                    className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3 ${t.isDeleted ? 'opacity-50 grayscale' : ''}`}
+                    className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3 w-full ${t.isDeleted ? 'opacity-50 grayscale' : ''}`}
                   >
                     <div className={`flex-1 flex flex-col gap-2 ${t.isDeleted ? 'line-through' : ''}`}>
                       <div className="flex justify-between items-start">
@@ -602,8 +594,9 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         {/* Tab 4: Settlement */}
         {activeTab === 'settle' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-fit">
+            {/* FIX: Removed grid-cols-2, force vertical stack */}
+            <div className="flex flex-col gap-6">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-full">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-rose-600">
                   <Calculator size={20} /> 成員收支總覽 (HKD)
                 </h2>
@@ -624,7 +617,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                 </div>
               </div>
 
-              <div className="bg-gray-900 text-white p-5 rounded-2xl shadow-lg h-fit">
+              <div className="bg-gray-900 text-white p-5 rounded-2xl shadow-lg w-full">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <ArrowRightLeft size={20} className="text-rose-400" /> 智能分帳方案
                 </h2>
@@ -728,7 +721,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
 
       {/* Bottom Nav - Fixed width matching container */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-40">
-        <div className="w-full max-w-5xl mx-auto flex justify-around">
+        <div className="w-full lg:max-w-4xl mx-auto flex justify-around">
           <NavButton active={activeTab === 'members'} onClick={() => setActiveTab('members')} icon={<Users size={20} />} label="隊友" />
           <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<Plus size={24} />} label="記帳" isMain />
           <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<Receipt size={20} />} label="記錄" />
