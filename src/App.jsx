@@ -31,20 +31,6 @@ const formatCurrency = (amount, currency = 'HKD') => {
   }).format(amount);
 };
 
-// --- Mobile Layout Wrapper ---
-// 這個組件負責確保無論在電腦還是手機，都呈現手機 App 的比例
-const MobileContainer = ({ children, className = "" }) => {
-  return (
-    // 外層：在電腦上顯示灰色背景並置中
-    <div className="min-h-screen bg-gray-200 flex justify-center font-sans text-gray-800">
-      {/* 內層：模擬手機螢幕，限制最大寬度為 md (約 450px)，並設定白色背景與陰影 */}
-      <div className={`w-full max-w-md bg-gray-50 min-h-screen relative shadow-2xl overflow-x-hidden ${className}`}>
-        {children}
-      </div>
-    </div>
-  );
-};
-
 export default function TravelExpenseApp() {
   // --- Global State: All Books ---
   const [books, setBooks] = useState(() => {
@@ -80,6 +66,7 @@ export default function TravelExpenseApp() {
     setBooks([newBook, ...books]);
     setNewBookName('');
     setIsCreateModalOpen(false);
+    // Optional: Auto open the new book
     setActiveBookId(newBook.id);
   };
 
@@ -110,31 +97,40 @@ export default function TravelExpenseApp() {
   }
 
   return (
-    <MobileContainer>
-      {/* Bookshelf Header - sticky ensures it stays at top inside the container */}
-      <header className="bg-gray-900 text-white p-4 shadow-md sticky top-0 z-20">
-        <div className="relative flex items-center justify-center h-10">
-          <h1 className="text-xl font-bold flex items-center gap-2 absolute left-1/2 -translate-x-1/2 w-full justify-center">
+    /* 
+       LAYOUT FIX: 
+       Changed 'max-w-md' to 'w-full max-w-3xl'.
+       This allows the app to expand up to 768px (tablet/large phone width) 
+       while taking full width on smaller devices.
+    */
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-3xl mx-auto shadow-2xl">
+      {/* Bookshelf Header */}
+      <header className="bg-gray-900 text-white p-4 shadow-md sticky top-0 z-10">
+        <div className="w-full relative flex items-center justify-center h-10">
+          {/* 1. Title Centered & Renamed */}
+          <h1 className="text-xl font-bold flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
             <Book size={24} className="text-rose-400" /> 同行記
           </h1>
           
+          {/* 2. Conditional Button: Only show if books exist */}
           {books.length > 0 && (
             <button 
               onClick={() => setIsCreateModalOpen(true)}
               className="absolute right-0 bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition"
             >
-              <Plus size={16} /> <span className="hidden sm:inline">新數簿</span><span className="sm:hidden">新增</span>
+              <Plus size={16} /> 立即起番份數簿
             </button>
           )}
         </div>
       </header>
 
-      <main className="p-4 pb-24">
+      <main className="w-full p-4">
         {books.length === 0 ? (
+          // Empty State
           <div className="mt-10 flex flex-col items-center justify-center">
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="w-full h-64 border-4 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center gap-4 text-gray-400 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 transition group"
+              className="w-full max-w-sm h-64 border-4 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center gap-4 text-gray-400 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 transition group"
             >
               <div className="bg-gray-100 group-hover:bg-rose-100 p-6 rounded-full transition">
                 <Plus size={48} />
@@ -143,7 +139,9 @@ export default function TravelExpenseApp() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-4">
+          // Book List
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            {/* Added sm:grid-cols-2 to show 2 columns on wider screens if needed */}
             {books.map(book => (
               <motion.div 
                 key={book.id}
@@ -151,14 +149,14 @@ export default function TravelExpenseApp() {
                 className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center group hover:shadow-md transition cursor-pointer"
                 onClick={() => setActiveBookId(book.id)}
               >
-                <div className="flex items-center gap-4 overflow-hidden">
-                  <div className="bg-rose-100 text-rose-600 p-3 rounded-xl flex-shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="bg-rose-100 text-rose-600 p-3 rounded-xl">
                     <Book size={24} />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-lg text-gray-800 truncate">{book.name}</h3>
-                    <p className="text-xs text-gray-400 truncate">
-                      {new Date(book.created).toLocaleDateString()} • {book.members.length} 位隊友
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">{book.name}</h3>
+                    <p className="text-xs text-gray-400">
+                      建立於: {new Date(book.created).toLocaleDateString()} • {book.members.length} 位隊友
                     </p>
                   </div>
                 </div>
@@ -167,7 +165,7 @@ export default function TravelExpenseApp() {
                     e.stopPropagation();
                     setDeleteBookModal({ show: true, bookId: book.id });
                   }}
-                  className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition flex-shrink-0"
+                  className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition"
                 >
                   <Trash2 size={20} />
                 </button>
@@ -206,7 +204,7 @@ export default function TravelExpenseApp() {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal (Burn Book) */}
       <AnimatePresence>
         {deleteBookModal.show && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -221,27 +219,27 @@ export default function TravelExpenseApp() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">是否要燒數簿？</h3>
               <p className="text-gray-500 text-sm mb-6">
-                刪除後資料將無法復原。
+                刪除後資料將無法復原，所有帳目將會灰飛煙滅。
               </p>
               <div className="flex gap-3">
                 <button 
                   onClick={() => setDeleteBookModal({ show: false, bookId: null })}
                   className="flex-1 py-3 rounded-xl bg-gray-100 font-bold text-gray-700 hover:bg-gray-200"
                 >
-                  取消
+                  否 (取消)
                 </button>
                 <button 
                   onClick={handleDeleteBookConfirm}
                   className="flex-1 py-3 rounded-xl bg-red-600 font-bold text-white hover:bg-red-700 shadow-lg shadow-red-200"
                 >
-                  燒毀
+                  是 (燒毀)
                 </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-    </MobileContainer>
+    </div>
   );
 }
 
@@ -249,6 +247,7 @@ export default function TravelExpenseApp() {
 function ActiveBookView({ book, onUpdate, onBack }) {
   const [activeTab, setActiveTab] = useState('members');
   
+  // Local state for inputs (doesn't need to be saved to disk until submitted)
   const [newMemberName, setNewMemberName] = useState('');
   const [expenseForm, setExpenseForm] = useState({
     amount: '',
@@ -281,6 +280,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   };
 
   const removeMember = (id) => {
+    // Check if involved in transactions
     const hasRecords = book.transactions.some(t => t.payerId === id || t.involvedIds.includes(id));
     if (hasRecords) {
       showToast("此人有帳在身，不能刪除", "error");
@@ -387,16 +387,21 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   }, [book.members, book.transactions]);
 
   return (
-    <MobileContainer>
-      {/* Header - Sticky */}
-      <header className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 shadow-md sticky top-0 z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <button onClick={onBack} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition flex-shrink-0">
+    /* 
+       LAYOUT FIX: 
+       Changed 'max-w-md' to 'w-full max-w-3xl'.
+       This ensures the active book view also uses the full available width.
+    */
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative w-full max-w-3xl mx-auto shadow-2xl">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 shadow-md sticky top-0 z-10">
+        <div className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition">
               <ArrowLeft size={20} />
             </button>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold leading-tight truncate">{book.name}</h1>
+            <div>
+              <h1 className="text-lg font-bold leading-tight">{book.name}</h1>
               <div className="flex items-center gap-1 text-[10px] opacity-80">
                  <Save size={10} /> 自動儲存中
               </div>
@@ -405,7 +410,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         </div>
       </header>
 
-      <main className="p-4 pb-24">
+      <main className="w-full p-4">
         {/* Tab 1: Settings & Members */}
         {activeTab === 'members' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -431,7 +436,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
                     value={book.settings.exchangeRate}
                     onChange={(e) => updateSettings('exchangeRate', parseFloat(e.target.value))}
                     step="0.0001"
-                    className="border p-2 rounded w-24 text-center font-mono"
+                    className="border p-2 rounded w-28 text-center font-mono"
                   />
                   <span className="text-sm text-gray-600">HKD</span>
                 </div>
@@ -727,16 +732,17 @@ function ActiveBookView({ book, onUpdate, onBack }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Nav - Fixed but constrained to mobile width */}
-      <nav className="fixed bottom-0 w-full max-w-md left-1/2 -translate-x-1/2 bg-white border-t border-gray-200 pb-safe z-40">
-        <div className="flex justify-around">
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-40">
+        {/* Changed max-w-3xl to match main container */}
+        <div className="flex justify-around w-full max-w-3xl mx-auto">
           <NavButton active={activeTab === 'members'} onClick={() => setActiveTab('members')} icon={<Users size={20} />} label="隊友" />
           <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<Plus size={24} />} label="記帳" isMain />
           <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<Receipt size={20} />} label="記錄" />
           <NavButton active={activeTab === 'settle'} onClick={() => setActiveTab('settle')} icon={<Calculator size={20} />} label="分帳" />
         </div>
       </nav>
-    </MobileContainer>
+    </div>
   );
 }
 
