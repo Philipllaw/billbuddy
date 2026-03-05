@@ -97,7 +97,7 @@ export default function TravelExpenseApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-10">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative max-w-md mx-auto shadow-2xl">
       {/* Bookshelf Header */}
       <header className="bg-gray-900 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="max-w-3xl mx-auto relative flex items-center justify-center h-10">
@@ -383,7 +383,7 @@ function ActiveBookView({ book, onUpdate, onBack }) {
   }, [book.members, book.transactions]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24 relative max-w-md mx-auto shadow-2xl">
       {/* Header */}
       <header className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
